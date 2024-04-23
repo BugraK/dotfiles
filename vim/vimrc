@@ -1,0 +1,85 @@
+" Use Vim settings, rather then Vi settings (much better!).
+" This must be first, because it changes other options as a side effect.
+set nocompatible
+
+" ================ Pathogen ==========================
+execute pathogen#infect() |        " Initialise pathogen
+
+" ================ Syntax & Filetype ================
+syntax on
+set nu
+filetype plugin indent on
+set expandtab
+set shiftwidth=2
+set softtabstop=4
+
+" ================ Encoding =========================
+set encoding=utf8
+
+" ================ File Locations ===================
+set backupdir=~/dotfiles/_temp_files/vim/backup//
+set directory=~/dotfiles/_temp_files/vim/swap//
+set undodir=~/dotfiles/_temp_files/vim/undo//
+
+" ================ Colours ==========================
+colorscheme onedark
+
+if has('gui_running')
+  set guifont=Menlo:h14
+  set antialias
+"  set background=light
+"  colorscheme solarized
+"  colorscheme gruvbox
+else
+"  set background=dark
+"  colorscheme zenburn
+"  colorscheme gruvbox
+  let g:onedark_termcolors=16
+endif
+
+let g:gruvbox_contrast_light='soft'
+
+"set termguicolors
+
+function! BgToggle()
+  if &background == "light"
+    execute ":set background=dark"
+  else
+    execute ":set background=light"
+  endif
+endfunction
+
+"Toggle light and dark backgrounds
+"call togglebg#map("<F6>")
+
+" ==================Writing Mode=====================
+set wrap
+set linebreak
+set nolist
+
+" ================ Mappings =========================
+nnoremap <silent> <F6> :set cursorline!<CR>
+let mapleader = ","
+nnoremap <leader>bg :call BgToggle()<cr>
+
+" ================ Plugins ==========================
+
+" ---------------- Syntastic --------------------
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+
+" ---------------- Pandoc ---------------------------
+" let g:pandoc#folding#mode = 'stacked'
+
+" ---------------- Gabrielelana-Markdown ---------------------------
+" let g:markdown_enable_folding = 1
+
+" ---------------- vim-plist -----------------
+" let g:plist_display_format = 'xml'
+" let g:plist_save_format = 'binary'

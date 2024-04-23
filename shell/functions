@@ -1,0 +1,94 @@
+function open_command() {
+  local open_cmd
+
+  # define the open command
+  case "$OSTYPE" in
+    darwin*)  open_cmd='open' ;;
+    cygwin*)  open_cmd='cygstart' ;;
+    linux*)   ! [[ $(uname -a) =~ "Microsoft" ]] && open_cmd='xdg-open' || {
+                open_cmd='cmd.exe /c start ""'
+                [[ -e "$1" ]] && { 1="$(wslpath -w "${1:a}")" || return 1 }
+              } ;;
+    msys*)    open_cmd='start ""' ;;
+    *)        echo "Platform $OSTYPE not supported"
+              return 1
+              ;;
+  esac
+
+  # don't use nohup on OSX
+  if [[ "$OSTYPE" == darwin* ]]; then
+    ${=open_cmd} "$@" &>/dev/null
+  else
+    nohup ${=open_cmd} "$@" &>/dev/null
+  fi
+}
+
+## Extract files
+extract () {
+    if [ -f $1 ] ; then
+      case $1 in
+        *.tar.bz2)   tar xjf $1     ;;
+        *.tar.gz)    tar xzf $1     ;;
+        *.bz2)       bunzip2 $1     ;;
+        *.rar)       unrar e $1     ;;
+        *.gz)        gunzip $1      ;;
+        *.tar)       tar xf $1      ;;
+        *.tbz2)      tar xjf $1     ;;
+        *.tgz)       tar xzf $1     ;;
+        *.zip)       unzip $1       ;;
+        *.Z)         uncompress $1  ;;
+        *.7z)        7z x $1        ;;
+        *)     echo "'$1' cannot be extracted via extract()" ;;
+         esac
+     else
+         echo "'$1' is not a valid file"
+     fi
+}
+
+## cd into a directory
+fd() {
+  local dir
+  dir=$(find ${1:-.} -path '*/\.*' -prune \
+                  -o -type d -print 2> /dev/null | fzy) &&
+  cd "$dir"
+}
+
+## Insert fuzzy-found paths directly into the shell command line
+function insert-fzy-path-in-command-line() {
+        local selected_path
+        echo # Run fzy underneath the current prompt
+        selected_path=$(ag -l -g '' | fzy) || return
+        LBUFFER="$LBUFFER${(q)selected_path} " # ${(q)VAR} shell-escapes the string
+        zle reset-prompt
+}
+zle -N insert-fzy-path-in-command-line
+
+unsetopt flowcontrol # By default, ^S freezes terminal output, only needed if keybinding is ^S
+bindkey "^S" "insert-fzy-path-in-command-line"
+
+## Search for a file and open it in vim
+#FILE=$(ag -l -g '' | fzy) && vim "$FILE"
+
+# fh - search in your command history and execute selected command
+fh() {
+  eval $( ([ -n "$ZSH_NAME" ] && fc -l 1 || history) | fzy   | sed 's/ *[0-9]* *//')
+}
+
+# sudo or sudoedit will be inserted before the command
+sudo-command-line() {
+    [[ -z $BUFFER ]] && zle up-history
+    if [[ $BUFFER == sudo\ * ]]; then
+        LBUFFER="${LBUFFER#sudo }"
+    elif [[ $BUFFER == $EDITOR\ * ]]; then
+        LBUFFER="${LBUFFER#$EDITOR }"
+        LBUFFER="sudoedit $LBUFFER"
+    elif [[ $BUFFER == sudoedit\ * ]]; then
+        LBUFFER="${LBUFFER#sudoedit }"
+        LBUFFER="$EDITOR $LBUFFER"
+    else
+        LBUFFER="sudo $LBUFFER"
+    fi
+}
+zle -N sudo-command-line
+# Defined shortcut keys: [Esc] [Esc]
+bindkey "\e\e" sudo-command-line

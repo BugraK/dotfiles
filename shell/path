@@ -1,0 +1,2 @@
+export PATH="/opt/local/bin:/opt/local/sbin:$PATH:/opt/local/Library/Frameworks/Python.framework/Versions/Current/bin:$HOME/bin"
+export MANPATH=/opt/local/share/man:/usr/local/share/man:/usr/share/man:$MANPATH

@@ -1,0 +1,108 @@
+# Some usefull examples:
+#
+# Jerome Leclanche <jerome@leclan.ch>
+# https://github.com/jleclanche/dotfiles/blob/master/.zshrc
+#
+# http://pastebin.com/GVVeP1eC
+#
+# http://www.masterzen.fr/2009/04/19/in-love-with-zsh-part-one/
+#
+
+# Load the shell dotfiles, and then some:
+# * ~/.path can be used to extend `$PATH`.
+# * ~/.extra can be used for other settings you don’t want to commit.
+for file in ~/.{path,exports,aliases,functions,mac_aliases,mac_functions,extra}; do
+  [ -r "$file" ] && [ -f "$file" ] && source "$file";
+done;
+unset file;
+
+# Load zsh-autosuggestions:
+source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
+source ~/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source ~/.zsh/zsh-history-substring-search/zsh-history-substring-search.zsh
+
+# Let's have some colors first
+autoload -U colors && colors
+
+# Keep 10000 lines of history within the shell and save it to ~/.cache/shell_history
+HISTSIZE=10000
+SAVEHIST=10000
+HISTFILE="$HOME/.shell_history"
+
+# shell options
+setopt autocd # assume "cd" when a command is a directory
+setopt histignorealldups # Substitute commands in the prompt
+setopt sharehistory # Share the same history between all shells
+setopt promptsubst # required for git plugin
+# setopt extendedglob
+# Extended glob syntax, eg ^ to negate, <x-y> for range, (foo|bar) etc.
+# Backwards-incompatible with bash, so disabled by default.
+
+# Keybindings
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
+
+# Completion system
+#
+#autoload -U promptinit
+#promptinit
+#
+autoload -Uz compinit
+compinit
+
+# Custom completion styles
+
+zstyle ':completion:*:warnings' format 'Too bad there is nothing'
+# format all messages not formatted in bold prefixed with ----
+zstyle ':completion:*' format '%B---- %d%b'
+# format descriptions (notice the vt100 escapes)
+zstyle ':completion:*:descriptions'    format $'%{\e[0;31m%}completing %B%d%b%{\e[0m%}'
+# bold and underline normal messages
+zstyle ':completion:*:messages' format '%B%U---- %d%u%b'
+# format in bold red error messages
+zstyle ':completion:*:warnings' format "%B$fg[red]%}---- no match for: $fg[white]%d%b"
+
+# Case-insensitive auto-complete
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+# activate menu selection
+zstyle ':completion:*' menu select=2
+# Let's use the tag name as group name
+zstyle ':completion:*' group-name ''
+
+
+#zstyle ':completion:*' auto-description 'specify: %d'
+#zstyle ':completion:*' completer _expand _complete _correct _approximate
+#zstyle ':completion:*' format 'Completing %d'
+#zstyle ':completion:*' group-name ''
+#zstyle ':completion:*' menu select=2 eval "$(dircolors -b)"
+#zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+#zstyle ':completion:*' list-colors ''
+#zstyle ':completion:*' list-prompt %SAt %p: Hit TAB for more, or the character to insert%s
+#zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Z}' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=* l:|=*'
+#zstyle ':completion:*' menu select=long
+#zstyle ':completion:*' select-prompt %SScrolling active: current selection at %p%s
+#zstyle ':completion:*' use-compctl false
+#zstyle ':completion:*' verbose true
+#
+#zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#)*=0=01;31'
+#zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
+
+# Let's complete known hosts and hosts from ssh's known_hosts file
+basehost="host1.example.com host2.example.com"
+hosts=($((( [ -r .ssh/known_hosts ] && awk '{print $1}' .ssh/known_hosts | tr , '\n'); echo $basehost; ) | sort -u) )
+zstyle ':completion:*' hosts $hosts
+
+
+# Promt
+PROMPT="%{$fg[magenta]%}%n%{$reset_color%} at %{$fg[yellow]%}%M%{$reset_color%} in %{$fg_bold[green]%}%~%{$reset_color%}
+%{$fg_bold[cyan]%}➡︎%{$reset_color%} "
+RPROMPT="${ret_status}%{$fg_bold[green]%}%p %{$fg_bold[blue]%} %D %T % %{$reset_color%}"
+
+## Usefull extras:
+#
+
+# Display CPU usage stats for commands taking more than 10 seconds
+REPORTTIME=10
+
+# Mass renaming files
+autoload -U zmv
